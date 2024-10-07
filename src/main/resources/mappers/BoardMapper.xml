@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+ <mapper namespace="com.board.mappers.Board">
+ 
+ <!-- 게시물 리스트 -->
+ <select id="list" parameterType="HashMap" resultType="com.board.dto.BoardDTO">
+ 	select * from tbl_board
+ 	where title like concat('%',#{keyword},'%')
+ 		or writer like concat('%',#{keyword},'%')
+ 		or content like concat('%',#{keyword},'%')
+ 	order by seqno desc
+ 	limit #{startPoint},#{postNum}
+ </select>
+ 
+ <!-- 검색 갯수 -->
+ <select id="getTotalCount" parameterType="string" resultType="int">
+ 	select count(*) from tbl_board
+ 	where title like concat('%',#{keyword},'%')
+ 		or writer like concat('%',#{keyword},'%')
+ 		or content like concat('%',#{keyword},'%')
+ </select>
+ 
+ </mapper>

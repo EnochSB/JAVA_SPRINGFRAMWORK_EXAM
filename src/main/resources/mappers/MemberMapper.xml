@@ -1,0 +1,109 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+ <mapper namespace="com.board.mappers.Member">
+ 
+ <!-- 회원 등록 -->
+ <insert id="signup" parameterType="com.board.dto.MemberDTO">
+ 	insert into tbl_member (userid,username,password,gender,hobby,job,description,
+ 		zipcode,address,telno,email,role,org_filename,stored_filename,filesize,lastpwdate)
+ 		values (#{userid},#{username},#{password},#{gender},#{hobby},#{job},#{description},
+ 		#{zipcode},#{address},#{telno},#{email},'USER',#{org_filename},#{stored_filename},
+ 		#{filesize},#{lastpwdate})
+ </insert>
+ 
+ <!-- 회원 정보 수정 -->
+ <update id="modifyMemberInfo" parameterType="com.board.dto.MemberDTO">
+ 	update tbl_member set gender=#{gender}, hobby=#{hobby}, job=#{job}, description=#{description},
+ 	zipcode=#{zipcode}, address=#{address}, telno=#{telno}, email=#{email},
+ 	org_filename=#{org_filename}, stored_filename=#{stored_filename} ,filesize=#{filesize}
+ 	where userid=#{userid}
+ </update>
+ 
+ <!-- 패스워드 변경 -->
+ <update id="modifyMemberPassword" parameterType="com.board.dto.MemberDTO">
+ 	update tbl_member set password=#{password},pwcheck=0 where userid=#{userid}
+ </update>
+ 
+ <!-- 아이디 찾기 -->
+ <select id="searchID" parameterType="com.board.dto.MemberDTO" resultType="string">
+ 	select userid from tbl_member where (username=#{username}) and (telno=#{telno})
+ </select>
+ 
+ <!-- 비밀번호 찾기(변경) -->
+  <select id="searchPassword" parameterType="HashMap" resultType="com.board.dto.MemberDTO">
+ 	select * from tbl_member where (userid=#{userid}) and (telno=#{telno})
+ </select>
+ 
+  <!-- 이름 중복체크, 카운트 값이 0이면 중복없음. 아이디/비밀범호 찾기에 사용 -->
+ <select id="usernameCheck" parameterType="string" resultType="int">
+ 	select count(*) from tbl_member where username = #{username}
+ </select>
+ 
+  <!-- 전화번호 중복체크, 카운트 값이 0이면 중복없음. 아이디/비밀범호 찾기에 사용 -->
+ <select id="telnoCheck" parameterType="string" resultType="int">
+ 	select count(*) from tbl_member where telno = #{telno}
+ </select>
+ 
+ <!-- 30일 이후 패스워드 변경 연기 -->
+ <update id="nextTime" parameterType="string">
+ 	update tbl_member set pwcheck = (select ifnull(pwcheck,0) from tbl_member where userid=#{userid}) + 1 where userid = #{userid}
+ </update>
+ 
+ <!-- 아이디 중복체크, 카운트 값이 0이면 중복없음. -->
+ <select id="idCheck" parameterType="string" resultType="int">
+ 	select count(*) from tbl_member where userid = #{userid}
+ </select>
+ 
+ <!-- 주소 행 최대 갯수 계산 -->
+ <select id="addrTotalCount" parameterType="string" resultType="int">
+ 	select count(*) from tbl_addr where road like concat('%',#{addrSearch},'%')
+ 		or building like concat('%',#{addrSearch},'%')
+ </select>
+ 
+ <!-- 우편번호 검색 -->
+ <select id="addrSearch" parameterType="HashMap" resultType="com.board.dto.AddressDTO">
+ 	select * from tbl_addr where road like concat('%',#{addrSearch},'%')
+ 		or building like concat('%',#{addrSearch},'%')
+ 		order by zipcode limit #{startPoint},#{postNum}
+ </select>
+ 
+ <!-- 회원 정보 -->
+ <select id="memberInfo" parameterType="string" resultType="com.board.dto.MemberDTO">
+ 	select * from tbl_member where userid = #{userid}
+ </select>
+ 
+ <!-- 로그인 -->
+ <!-- authkey 등록(update) -->
+ <update id="authkeyUpdate" parameterType="com.board.dto.MemberDTO">
+ 	update tbl_member set authkey = #{authkey} where userid = #{userid}
+ </update>
+ 
+ <!-- authkey로 회원정보 찾기 -->
+ <select id="memberInfoByAuthkey" parameterType="string" resultType="com.board.dto.MemberDTO">
+ 	select * from tbl_member where authkey = #{authkey}
+ </select>
+ 
+ <!-- 마지막 로그인/로그아웃/패스워드 변경 시간 등록(dinamic sql) -->
+ <update id="lastdateUpdate" parameterType="HashMap">
+ 	update tbl_member
+ 	<choose>
+ 		<when test='status.equals("login")'>
+ 			set lastlogindate = #{lastdate}
+ 		</when>
+ 		<when test='status.equals("logout")'>
+ 			set lastlogoutdate = #{lastdate}
+ 		</when>
+ 		<when test='status.equals("password")'>
+ 			set lastpwdate = #{lastdate}
+ 		</when>
+ 	</choose>
+ 	where userid = #{userid}
+ </update>
+ 
+ <!-- 회원 DB 로그 등록 -->
+ <insert id="memberLogRegistry" parameterType="HashMap">
+	insert into tbl_member_log (userid, status) values (#{userid}, #{status}) 
+ </insert>
+ </mapper>
