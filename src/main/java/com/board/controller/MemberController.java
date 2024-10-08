@@ -289,6 +289,7 @@ public class MemberController {
 		if(!p.exists()) {
 			p.mkdir();
 		}
+		// 운영체제에 따라 이미지가 저장될 디렉토리 구조 설정 종료
 		
 		// 프로필 이미지 저장 경로
 		//String path ="c:\\Repository\\profile\\";

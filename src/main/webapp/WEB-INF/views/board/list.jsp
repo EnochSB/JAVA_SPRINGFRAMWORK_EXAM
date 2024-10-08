@@ -78,9 +78,9 @@ if(userid == ''){
 			<c:if test="${not empty list}">
 				<c:forEach items="${list}" var="list">
 	                <tr onmouseover="this.style.background='#46D2D2'" onmouseout="this.style.background='white'">
-	                    <td>${list.seqno}</td>
+	                    <td>${list.seq}</td>
 	                    <td>
-	                        <a href="/board/view?seqno=${list.seqno}}" onmouseover="this.style.textDecoration='underline'"
+	                        <a href="/board/view?seqno=${list.seqno}&page=${page}&keyword=${keyword}" onmouseover="this.style.textDecoration='underline'"
 	                        onmouseout="this.style.textDecoration='none'">${list.title}</a>
 	                    </td>
 	                    <td>${list.writer}</td>
@@ -98,7 +98,7 @@ if(userid == ''){
 			</c:if>
             </tbody>
         </table>
-        <div>${pageListView}</div>
+        <div>${pageList}</div>
         <div class="bottom_menu">
         	<a href="/board/list?page=1">처음으로</a>&nbsp;&nbsp;
             <a href="/board/write">글 쓰기</a>&nbsp;&nbsp;

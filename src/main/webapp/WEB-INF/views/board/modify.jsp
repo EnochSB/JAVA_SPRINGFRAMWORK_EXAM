@@ -4,7 +4,7 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<title>게시물 작성</title>
+<title>게시물 수정</title>
 <link rel="stylesheet" href="/resources/CSS/board.css">
 <style>
 .fileUploadForm {
@@ -223,7 +223,7 @@
 		fileCount --;
 	}
 	
-	const registerForm = async () => {
+	const modifyForm = async () => {
 		
 		// 유효성 검사
 		if(title.value == ''){
@@ -238,7 +238,7 @@
 			return false;
 		}
 		
-		let formData = new FormData(WriteForm);
+		let formData = new FormData(ModifyForm);
 		for(let i=0; i<content_files.length; i++){
 			if(!content_files[i].is_delete)
 				formData.append("sendToFileList", content_files[i]);
@@ -255,8 +255,8 @@
 		).then((data) => {
 			
 			if(data.message == 'good'){
-				alert('게시물이 등록되었습니다.\n게시물 목록 화면으로 이동합니다.');
-				document.location='/board/list?page=1';
+				alert('게시물이 수정되었습니다.\n게시물 상세 보기 화면으로 이동합니다.');
+				document.location='/board/view?seqno=${view.seqno}&page=${page}&keyword=${keyword}';
 			}
 			
 		}).catch((error) => {
@@ -279,22 +279,35 @@
 </div>
 
 <div class="main">
-	<h1>게시물 작성</h1>
+	<h1>게시물 수정</h1>
 	<br>
 	<div class="WriteForm">
-		<form id="WriteForm" method="POST">
+		<form id="ModifyForm" method="POST">
 			<input type="text" class="input_field" value="작성자: ${username}" disabled>
-			<input type="hidden" name="writer" value="${username}">
-			<input type="hidden" name="userid" value="${userid}">
-			<input type="hidden" name="kind" value="I">
-			<input type="text" name="title" class="input_field" id="title" placeholder="여기에 제목을 입력하세요.">
-			<textarea class="content" id="content" rows="500" cols="100" name="content" placeholder="여기에 내용을 입력하세요"></textarea>
+			<input type="hidden" name="writer" value="${view.writer}">
+			<input type="hidden" name="userid" value="${view.userid}">
+			<input type="hidden" name="seqno" value="${view.seqno}">
+			<input type="hidden" name="page" value="${page}">
+			<input type="hidden" name="keyword" value="${keyword}">
+			<input type="hidden" name="kind" value="U">
+			<input type="text" name="title" class="input_field" id="title" value="${view.title}" placeholder="여기에 제목을 입력하세요.">
+			<textarea class="content" id="content" rows="500" cols="100" name="content" placeholder="여기에 내용을 입력하세요">${view.content}</textarea>
+			<c:if test="${not empty fileListView}">
+				<div id="fileList">
+					<p style="text-align:left;">
+						<c:forEach items="${fileListView}" var="file">
+							&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;삭제 : <input type="checkbox" name="deleteFileList" value="${file.fileseqno}">
+							${file.org_filename}&nbsp;(${file.filesize} Byte)<br>
+						</c:forEach>
+					</p>
+				</div>
+			</c:if>
 			<div class="fileUploadForm">
 				<input type="file" id="inputFile" name="uploadFile" style="display:none;" multiple>
 				<div class="fileZone" id="fileZone">파일 첨부를 하기 위해서는 클릭하거나 여기로 파일을 드래그 하세요.<br>첨부파일은 최대 5개까지 등록이 가능합니다.</div>
 				<div class="fileUploadList" id="fileUploadList"></div>
 			</div>
-			<input type="button" class="btn_write" value="등록" onclick="registerForm()">
+			<input type="button" class="btn_write" value="수정" onclick="modifyForm()">
 			<input type="button" class="btn_cancel" value="취소" onclick="history.back()">
 		</form>
 	</div>

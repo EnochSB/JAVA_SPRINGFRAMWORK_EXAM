@@ -2,24 +2,136 @@
 <!DOCTYPE mapper
   PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
   "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+  
  <mapper namespace="com.board.mappers.Board">
- 
+
  <!-- 게시물 리스트 -->
  <select id="list" parameterType="HashMap" resultType="com.board.dto.BoardDTO">
- 	select * from tbl_board
+ 	select @seq:=@seq+1 as seq,seqno,userid,writer,title,regdate,hitno
+ 	from (select @seq:=0) a, tbl_board b
  	where title like concat('%',#{keyword},'%')
  		or writer like concat('%',#{keyword},'%')
  		or content like concat('%',#{keyword},'%')
- 	order by seqno desc
+ 	order by seq desc
  	limit #{startPoint},#{postNum}
  </select>
  
+ <!-- 게시물 전체 목록 보기 -->
+ <select id="listAll" parameterType="HashMap" resultType="com.board.dto.BoardDTO">
+ 	select seqno,userid,writer,title,regdate,hitno
+ 	from tbl_board
+ 	order by seqno desc
+ </select>
+
  <!-- 검색 갯수 -->
  <select id="getTotalCount" parameterType="string" resultType="int">
  	select count(*) from tbl_board
- 	where title like concat('%',#{keyword},'%')
+ 		where title like concat('%',#{keyword},'%')
  		or writer like concat('%',#{keyword},'%')
  		or content like concat('%',#{keyword},'%')
  </select>
  
- </mapper>
+ <!-- 게시물 상세 보기 -->
+ <select id="view" parameterType="int" resultType="com.board.dto.BoardDTO">
+ 	select * from tbl_board
+ 	where seqno = #{seqno}
+ </select>
+ 
+ <!-- 게시물 이전 보기 -->
+ <!-- mybatis는 xml문서로 설정하기 때문에 where절에 < 같은 비교연산자를 사용하기 위해 -->
+ <!-- <![CDATA[]]>로 감싸줘야 한다. -->
+ <select id="pre_seqno" parameterType="HashMap" resultType="int">
+ 	<![CDATA[
+ 	select ifnull(max(seqno),0)
+ 	from tbl_board
+ 	where seqno < #{seqno}
+ 	and (
+ 	title like concat('%',#{keyword},'%')
+ 	or writer like concat('%',#{keyword},'%')
+ 	or content like concat('%',#{keyword},'%')
+ 	)
+ 	]]>
+ </select>
+ 
+ <!-- 게시물 다음 보기 -->
+ <select id="next_seqno" parameterType="HashMap" resultType="int">
+ 	<![CDATA[
+ 	select ifnull (min(seqno),0)
+ 	from tbl_board
+ 	where seqno > #{seqno}
+ 	and (
+ 	title like concat('%',#{keyword},'%')
+ 	or writer like concat('%',#{keyword},'%')
+ 	or content like concat('%',#{keyword},'%')
+ 	)
+ 	]]>
+ </select>
+ 
+ <!-- 게시물 조회수 증가 -->
+ <update id="hitno" parameterType="int">
+ 	update tbl_board
+ 	set hitno = (
+	 	select ifnull(hitno,0) 
+	 	from tbl_board
+	 	where seqno = #{seqno}
+ 		) + 1
+ 	where seqno = #{seqno}
+ </update>
+ 
+ <!-- 게시물 등록 -->
+ <insert id="write" parameterType="com.board.dto.BoardDTO">
+ 	insert into tbl_board (userid,writer,title,content) values (#{userid},#{writer},#{title},#{content})
+ </insert>
+ 
+ <!-- 게시물 수정 -->
+ <update id="modify" parameterType="com.board.dto.BoardDTO">
+ 	update tbl_board
+ 	set writer = #{writer},
+ 		title = #{title},
+ 		content = #{content},
+ 		userid = #{userid}
+ 	where seqno = #{seqno}
+ </update>
+ 
+ <!-- 게시물 삭제 -->
+ <delete id="deleteBoard" parameterType="int">
+ 	delete from tbl_board where seqno = #{seqno}
+ </delete>
+
+ <!--  max seqno 구하기 -->
+ <select id="getMaxSeqno" parameterType="string" resultType="int">
+ 	select max(seqno) from tbl_board where userid = #{userid}
+ </select>
+ 
+ <!-- 첨부 파일 정보 등록 -->
+ <insert id="fileInfoRegistry" parameterType="HashMap">
+ 	insert into tbl_file (seqno,userid,org_filename,stored_filename,filesize,checkfile)
+ 	values (#{seqno},#{userid},#{org_filename},#{stored_filename},#{filesize},'Y')
+ </insert>
+ 
+ <!-- 게시물 삭제 시 게시물에 포함된 첨부 파일 전체 삭제 / 게시물 수정 시 일부 첨부 파일 삭제 -->
+ <!-- B: 게시물 삭제 시 첨부된 파일 전체 삭제       / F: 게시물 수정시 선택한 첨부파일 삭제 -->
+ <update id="deleteFileList" parameterType="HashMap">
+ 	update tbl_file
+ 	set checkfile = 'N'
+ 	where
+ 	<choose>
+ 		<when test='kind.equals("F")'>
+ 			fileseqno = #{fileseqno}
+ 		</when>
+ 		<when test='kind.equals("B")'>
+ 			seqno = #{seqno}
+ 		</when>
+ 	</choose>
+ </update>
+ 
+ <!-- 게시물 상세 페이지에서 첨부한 파일 목록 보기 -->
+ <select id="fileListView" parameterType="int" resultType="com.board.dto.FileDTO">
+ 	select * from tbl_file where seqno = #{seqno} and checkfile = 'Y'
+ </select>
+
+ <!-- 파일 정보 가져오기 -->
+ <select id="fileInfo" parameterType="int" resultType="com.board.dto.FileDTO">
+ 	select * from tbl_file where fileseqno = #{fileseano}
+ </select>
+</mapper>
