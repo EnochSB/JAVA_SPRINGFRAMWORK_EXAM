@@ -44,7 +44,277 @@ window.onload = () => {
 		myChoice.innerHTML = username + '님은 아직 선택하지 않으셨습니다.';
 	}
 	
+	startupPage();
+	
 }
+
+// 좋아요 싫어요 처리 함수 시작
+const sendDataToServer = async (myLike, myDislike, checkCount) => {
+	
+	const myLikeCheck = myLike;
+	const myDislikeCheck = myDislike;
+	const checkCnt = checkCount;
+	
+	const queryString = {	// JSON 형태로 구성되어있지만 자바 객체
+		"seqno": ${view.seqno},
+		"userid": "${userid}",
+		"mylikecheck": myLikeCheck,
+		"mydislikecheck": myDislikeCheck,
+		"checkCnt": checkCnt
+	};
+	
+	await fetch('/board/likeCheck', {
+		method: "POST",
+		headers: {"content-type": "application/json"},
+		body: JSON.stringify(queryString)	// 자바 객체를 JSON으로 변환해서 서버로 요청 전송
+	}).then((response) => response.json()
+	).then((data) => {
+		like.innerHTML = data.likeCnt;
+		dislike.innerHTML = data.dislikeCnt;
+	}).catch((error) => {
+		console.log("error=" + error);
+	});
+	
+}
+
+const likeView = () => {
+	
+	if(myLikeCheck == "Y" && myDislikeCheck == "N") { // 좋아요 취소
+		alert("좋아요를 취소합니다.");
+		const checkCnt = 1;	// likeCnt --;
+		myLikeCheck = "N";
+		sendDataToServer(myLikeCheck, myDislikeCheck, checkCnt);
+		document.querySelector('.likeClick').style.backgroundColor = '#d2d2d2';
+	} else if(myLikeCheck == "N" && myDislikeCheck == "Y") {
+		alert("싫어요가 좋아요로 바뀝니다.");
+		const checkCnt = 2;	// likeCnt ++; dislikeCnt --;
+		myLikeCheck = "Y";
+		myDislikeCheck = "N";
+		sendDataToServer(myLikeCheck, myDislikeCheck, checkCnt);
+		document.querySelector('.likeClick').style.backgroundColor = '#00B9FF';
+		document.querySelector('.dislikeClick').style.backgroundColor = '#d2d2d2';
+	} else if(myLikeCheck == "N" && myDislikeCheck == "N") {
+		alert("좋아요를 선택했습니다.");
+		const checkCnt = 3;	// likeCnt ++;
+		myLikeCheck = "Y";
+		sendDataToServer(myLikeCheck, myDislikeCheck, checkCnt);
+		document.querySelector('.likeClick').style.backgroundColor = '#00B9FF';
+	}
+	
+	
+	if(myLikeCheck == 'Y') {
+		myChoice.innerHTML = username + '님의 선택은 좋아요 입니다.';
+	} else if(myDislikeCheck == 'Y') {
+		myChoice.innerHTML = username + '님의 선택은 싫어요 입니다.';
+	} else if(myLikeCheck == 'N' && myDislikeCheck == 'N') {
+		myChoice.innerHTML = username + '님은 아직 선택하지 않으셨습니다.';
+	}
+	
+}
+
+const dislikeView = () => {
+	
+	if(myDislikeCheck == "Y" && myLikeCheck == "N") { // 싫어요 취소
+		alert("싫어요를 취소합니다.");
+		const checkCnt = 4;	// dislikeCnt --;
+		myDislikeCheck = "N";
+		sendDataToServer(myLikeCheck, myDislikeCheck, checkCnt);
+		document.querySelector('.dislikeClick').style.backgroundColor = '#d2d2d2';
+	} else if(myDislikeCheck == "N" && myLikeCheck == "Y") {
+		alert("좋아요가 싫어요로 바뀝니다.");
+		const checkCnt = 5;	// likeCnt --; dislikeCnt ++;
+		myLikeCheck = "N";
+		myDislikeCheck = "Y";
+		sendDataToServer(myLikeCheck, myDislikeCheck, checkCnt);
+		document.querySelector('.dislikeClick').style.backgroundColor = '#00B9FF';
+		document.querySelector('.likeClick').style.backgroundColor = '#d2d2d2';
+	} else if(myLikeCheck == "N" && myDislikeCheck == "N") {
+		alert("싫어요를 선택했습니다.");
+		const checkCnt = 6;	// dislikeCnt ++;
+		myDislikeCheck = "Y";
+		sendDataToServer(myLikeCheck, myDislikeCheck, checkCnt);
+		document.querySelector('.dislikeClick').style.backgroundColor = '#00B9FF';
+	}
+	
+	
+	if(myLikeCheck == 'Y') {
+		myChoice.innerHTML = username + '님의 선택은 좋아요 입니다.';
+	} else if(myDislikeCheck == 'Y') {
+		myChoice.innerHTML = username + '님의 선택은 싫어요 입니다.';
+	} else if(myLikeCheck == 'N' && myDislikeCheck == 'N') {
+		myChoice.innerHTML = username + '님은 아직 선택하지 않으셨습니다.';
+	}
+	
+}
+// 좋아요 싫어요 처리 함수 끝
+
+// 댓글 처리 시작
+// 댓글 목록 보기
+const replyList = (data) => {
+	
+	var session_userid = '${userid}';
+	const jsonInfo = data;
+	
+	let replyList = document.querySelector('#replyList');
+	replyList.innerHTML = '';
+	
+	var result = "";
+	for(const i in jsonInfo){
+		
+		let elm = document.createElement('div');
+		elm.setAttribute('id', 's' + jsonInfo[i].replyseqno);	//<div id="s0"></div>
+		elm.setAttribute('style', 'font-size: 0.8em');			//<div id="s0" style='font-size:08em'></div>
+		
+		let result = "";
+		
+		result += "작성자: " + jsonInfo[i].replywriter;
+		if(jsonInfo[i].userid == session_userid){
+			result += "[<a href='javascript:replyModify(" + jsonInfo[i].replyseqno + ")' style='cursor:pointer'>수정</a> |";
+			result += "<a href='javascript:replyDelete(" + jsonInfo[i].replyseqno + ")' style='cursor:pointer'>삭제</a>]";
+		}
+		result += "&nbsp;&nbsp;" + jsonInfo[i].replyregdate;
+		result += "<div style='width:90%; height:auto; boarder-top:1px solid gray; overfolw:auto'>";
+		result += "<pre id='c" + jsonInfo[i].replyseqno + "'>" + jsonInfo[i].replycontent + "</pre><div>";
+		result += "<br>";
+		
+		elm.innerHTML = result;
+		replyList.appendChild(elm);
+	}
+}
+
+// 처음 페이지 시작할 때 댓글 목록 가져 오기
+const startupPage = async () => {
+	const data = {
+		seqno: "${view.seqno}"
+	};
+	
+	await fetch('/board/reply?kind=L', {
+		method: 'POST',
+		headers: {'content-type':"application/json"},
+		body: JSON.stringify(data)
+	}).then((response) => response.json())
+	  .then((data) => replyList(data))
+	  .catch((error) => {
+		  console.log("error: " + error);
+		  alert("시스템 장애로 댓글 가져오기가 실패했습니다.");
+	});
+}
+
+// 댓글 등록
+const replyRegistry = async () => {
+	
+	const replycontent = document.querySelector("#replycontent");
+	const userid = document.querySelector("#userid");
+	if(replycontent.value == ''){
+		alert("댓글을 입력하세요.");
+		replycontent.focus();
+		return false;
+	}
+	
+	const data = {
+		replywriter: replywriter.value,
+		replycontent: replycontent.value,
+		userid: userid.value,
+		seqno: seqno.value
+	};
+	
+	await fetch('/board/reply?kind=I', {
+		method: 'POST',
+		headers: {"content-type": "application/json"},
+		body: JSON.stringify(data)
+	}).then((response) => response.json()
+	).then((data) => {
+		replyList(data);
+	}).catch((error) => {
+		console.log("error=" + error);
+		alert("시스템 장애로 댓글 등록이 실패했습니다.");
+	});
+	
+	replycontent.value = "";
+}
+
+// 댓글 삭제
+const replyDelete = async (replyseqno) => {
+	
+	if(confirm('정말로 삭제 하시겠습니까?')){
+		
+		const data = {replyseqno: replyseqno, seqno: ${view.seqno}};
+		await fetch('/board/reply?kind=D', {
+			method: 'POST',
+			headers: {"content-type": "application/json"},
+			body: JSON.stringify(data)
+		}).then((response) => response.json()
+		).then((data) => {
+			replyList(data);
+		}).catch((error) => {
+			console.log("error=" + error);
+			alert("시스템 장애로 댓글 삭제를 실패했습니다.");
+		});
+	}
+}
+
+// 댓글 수정
+const replyModify = (replyseqno) => {
+	
+	const modifyReplyContent = document.querySelector('#c' + replyseqno);
+	
+	var strReplyList = "작성자: ${username}&nbsp;"
+		+ "<input type='button' id='btn_replyModify' value='수정'>"
+		+ "<input type='button' id='btn_replyModifyCancel' value='취소'>"
+		+ "<input type='hidden' name='replyseqno' value='" + replyseqno + "'>"
+		+ "<input type='hidden' name='seqno' value='${view.seqno}'>"
+		+ "<input type='hidden' id='writer' name='replywriter' value='${username}'>"
+		+ "<input type='hidden' id='userid' name='userid' value='${userid}'><br>"
+		+ "<textarea id='modify_replycontent' name='replycontent' cols='80' rows='5' maxlength='150' placeholder='글자수: 150자 이내'>"
+		+ modifyReplyContent.innerHTML + "</textarea><br>";
+	
+	let elm = document.createElement('div');
+	elm.innerHTML = strReplyList;
+	
+	let parentDiv = document.querySelector('#s' + replyseqno).parentNode;
+	parentDiv.insertBefore(elm, document.querySelector('#s' + replyseqno));
+	document.querySelector('#s' + replyseqno).style.display = 'none';
+	
+	const btnReplyModify = document.querySelector('#btn_replyModify');
+	const btnReplyModifyCancel = document.querySelector('#btn_replyModifyCancel');
+	
+	btnReplyModify.addEventListener('click', async () => {
+		
+		const data = {
+			replyseqno: replyseqno,
+			replycontent: modify_replycontent.value
+		}
+		await fetch('/board/reply?kind=U', {
+			method: 'POST',
+			headers: {'content-type':'application/json'},
+			body: JSON.stringify(data)
+		}).catch((error) => {
+			console.log("error: " + error);
+			alert("시스템 장애로 댓글 수정을 실패했습니다.");
+		});
+		
+		document.querySelector('#replyList').innerHTML = '';
+		startupPage();
+	});
+	
+	btnReplyModifyCancel.addEventListener('click', () => {
+		if(confirm('정말로 취소하시겠습니까?')){
+			document.querySelector('#replyList').innerHTML = '';
+			startupPage();
+		}
+	});
+}
+
+// 댓글 작성 취소
+const replyCancel = () => {
+	if(confirm("정말로 취소 하시겠습니까?")) {
+		replycontent.value = '';
+		replycontent.focus();
+	}
+}
+
+// 댓글 처리 끝
+
 </script>
 </head>
 <body>
@@ -100,10 +370,12 @@ window.onload = () => {
 			<textarea id="replycontent" name="replycontent" rows="5" cols="80" maxlength="150" placeholder="글자 수: 150자 이내"></textarea>
 			<br>
 			<input type="hidden" id="seqno" name="seqno" value="${view.seqno}">
-			<input type="hidden" id="userid" name="userid" value="${view.userid}">
+			<input type="hidden" id="userid" name="userid" value="${userid}">
 		</form>
-		<input type="button" id="btn_reply" value="댓글등록" onclick="replyRegister()">
+		<input type="button" id="btn_reply" value="댓글등록" onclick="replyRegistry()">
 		<input type="button" id="btn_cancel" value="취소" onclick="replyCancel()">
+		<hr>
+		<div id="replyList" class="replyList"></div>
 	</div>
 </div>
 

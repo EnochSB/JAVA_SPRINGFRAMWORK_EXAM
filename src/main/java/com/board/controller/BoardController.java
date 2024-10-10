@@ -2,6 +2,7 @@ package com.board.controller;
 
 import java.io.File;
 import java.net.URLEncoder;
+import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -18,12 +19,15 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.board.dto.BoardDTO;
 import com.board.dto.FileDTO;
+import com.board.dto.LikeDTO;
+import com.board.dto.ReplyDTO;
 import com.board.service.BoardService;
 import com.board.util.Page;
 
@@ -189,6 +193,20 @@ public class BoardController {
 		if(!SessionUserid.equals(view.getUserid()))
 			service.hitno(seqno);
 		
+		// 로그인 유저가 좋아요와 싫어요 중 무엇을 골랐는지 판단
+		// 1. tbl_like에서 값 가져오기
+		LikeDTO likeCheckView = service.likeCheckView(seqno, SessionUserid);
+		// 2. 처음 읽은 값이 좋아요/싫어요 등록이 안되어져 있는 경우 "N"으로 초기화
+		if (likeCheckView == null) {	// 좋아요/싫어요를 누른 기록 없음
+			model.addAttribute("myLikeCheck", "N");
+			model.addAttribute("myDislikeCheck", "N");
+		} else if (likeCheckView != null) {	// 좋아요/싫어요를 누른 기록이 있다.
+			model.addAttribute("myLikeCheck", likeCheckView.getMylikecheck());
+			model.addAttribute("myDislikeCheck", likeCheckView.getMydislikecheck());
+		}
+		
+		model.addAttribute("likecnt", view.getLikecnt());
+		model.addAttribute("dislikecnt", view.getDislikecnt());
 		model.addAttribute("view", service.view(seqno));
 		model.addAttribute("page", pageNum);
 		model.addAttribute("keyword", keyword);
@@ -259,6 +277,86 @@ public class BoardController {
 		rs.getOutputStream().write(fileByte);	// stream을 통해 1차원 byte타입 배열로 변환된 데이터(추후 파일로 변환)를 Buffer에 저장
 		rs.getOutputStream().flush(); // 버퍼에 있는 애용을 write
 		rs.getOutputStream().close(); // 스트림 닫기
+	}
+	
+	// 좋아요/싫어요 관리
+	// Form의 경우 클라이언트(웹브라우저)에서 서버로 전송할 때 serialize을 통해 자동으로 key-value로 바뀌게 되고 스프링에서 인식이됨.
+	@ResponseBody
+	@PostMapping("/board/likeCheck")
+	public Map<String,Integer> postlikeCheck(
+			@RequestBody
+			Map<String,Object> likeCheckData
+			) throws Exception {
+		
+		int seqno = (int) likeCheckData.get("seqno");
+		String userid = (String) likeCheckData.get("userid");
+		int checkCnt= (int) likeCheckData.get("checkCnt");
+		
+		// 현재 날짜, 시간 구해서 tbl_like에 입력될 수 있도록 Map Collection에 저장
+		String likeDate = "";
+		String dislikeDate = "";
+		if(likeCheckData.get("mylikecheck").equals("Y"))
+			likeDate = LocalDateTime.now().toString();
+		if(likeCheckData.get("mydislikecheck").equals("Y"))
+			dislikeDate = LocalDateTime.now().toString();
+		likeCheckData.put("likedate", likeDate);
+		likeCheckData.put("dislikedate", dislikeDate);
+		
+		// tbl_like 테이블에 입력/수정
+		LikeDTO likeCheckView = service.likeCheckView(seqno, userid);
+		if(likeCheckView == null) // 좋아요/싫어요 기록 없음
+			service.likeCheckRegistry(likeCheckData);
+		else	// 좋아요/싫어요 기록 존재
+			service.likeCheckUpdate(likeCheckData);
+		
+		// tbl_board 내의 likecnt, dislikecnt 값을 수정
+		BoardDTO board = service.view(seqno);
+		int likeCnt = board.getLikecnt();
+		int dislikeCnt = board.getDislikecnt();
+		
+		switch(checkCnt) {
+			case 1: likeCnt --; break;
+			case 2: likeCnt ++; dislikeCnt --; break;
+			case 3: likeCnt ++; break;
+			case 4: dislikeCnt --; break;
+			case 5: likeCnt --; dislikeCnt ++; break;
+			case 6: dislikeCnt ++; break;
+		}
+		
+		// 변경된 likeCnt, dislikeCnt 반영
+		service.boardLikeUpdate(seqno, likeCnt, dislikeCnt);
+			
+		Map<String,Integer> jsonData = new HashMap<>();
+		jsonData.put("likeCnt", likeCnt);
+		jsonData.put("dislikeCnt", dislikeCnt);
+		
+		return jsonData;
+	}
+	
+	// 댓글 처리
+	@ResponseBody
+	@PostMapping("/board/reply")
+	public List<ReplyDTO> postReply(
+			@RequestBody
+			ReplyDTO reply,
+			@RequestParam("kind")
+			String kind
+			) throws Exception {
+		
+		switch(kind) {
+		
+		case "I":	// 댓글 등록
+			service.replyRegistry(reply);
+			break;
+		case "U":	// 댓글 수정
+			service.replyUpdate(reply);
+			break;
+		case "D":	// 댓글 삭제
+			service.replyDelete(reply);
+			break;
+		}
+		
+		return service.replyView(reply);
 	}
 	
 	// 테스트용 게시물 만들기

@@ -5,6 +5,8 @@ import java.util.Map;
 
 import com.board.dto.BoardDTO;
 import com.board.dto.FileDTO;
+import com.board.dto.LikeDTO;
+import com.board.dto.ReplyDTO;
 
 public interface BoardDAO {
 	// 게시물 리스트
@@ -51,4 +53,28 @@ public interface BoardDAO {
 
 	// 파일 정보 가져오기
 	public FileDTO fileInfo(int fileseqno);
+	
+	// 좋아요 싫어요 체크 여부 확인
+	public LikeDTO likeCheckView(int seqno, String userid);
+	
+	// 좋아요 싫어요 최초 등록
+	public void likeCheckRegistry(Map<String,Object> data);
+	
+	// 좋아요 싫어요 수정
+	public void likeCheckUpdate(Map<String,Object> data);
+	
+	// 좋아요 싫어요 갯수 수정
+	public void boardLikeUpdate(int seqno, int likecnt, int dislikecnt);
+	
+	// 댓글 보기
+	public List<ReplyDTO> replyView(ReplyDTO reply);
+	
+	// 댓글 등록
+	public void replyRegistry(ReplyDTO reply);
+	
+	// 댓글 수정
+	public void replyUpdate(ReplyDTO reply);
+	
+	// 댓글 삭제
+	public void replyDelete(ReplyDTO reply);
 }

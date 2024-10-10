@@ -10,6 +10,8 @@ import org.springframework.stereotype.Repository;
 
 import com.board.dto.BoardDTO;
 import com.board.dto.FileDTO;
+import com.board.dto.LikeDTO;
+import com.board.dto.ReplyDTO;
 
 @Repository
 public class BoardDAOImpl implements BoardDAO {
@@ -117,5 +119,60 @@ public class BoardDAOImpl implements BoardDAO {
 	@Override
 	public FileDTO fileInfo(int fileseqno) {
 		return sql.selectOne(namespace + ".fileInfo", fileseqno);
+	};
+	
+	// 좋아요 싫어요 체크 여부 확인
+	@Override
+	public LikeDTO likeCheckView(int seqno, String userid) {
+		Map<String,Object> data = new HashMap<>();
+		data.put("seqno", seqno);
+		data.put("userid", userid);
+		return sql.selectOne(namespace + ".likeCheckView", data);
+	};
+	
+	// 좋아요 싫어요 최초 등록
+	@Override
+	public void likeCheckRegistry(Map<String,Object> data) {
+		sql.insert(namespace + ".likeCheckRegistry", data);
+	};
+	
+	// 좋아요 싫어요 수정
+	@Override
+	public void likeCheckUpdate(Map<String,Object> data) {
+		sql.update(namespace + ".likeCheckUpdate", data);
+	};
+	
+	// 좋아요 싫어요 갯수 수정
+	@Override
+	public void boardLikeUpdate(int seqno, int likecnt, int dislikecnt) {
+		Map<String,Object> data = new HashMap<>();
+		data.put("seqno", seqno);
+		data.put("likecnt", likecnt);
+		data.put("dislikecnt", dislikecnt);
+		sql.update(namespace + ".boardLikeUpdate", data);
+	};
+	
+	// 댓글 보기
+	@Override
+	public List<ReplyDTO> replyView(ReplyDTO reply) {
+		return sql.selectList(namespace + ".replyView", reply);
+	};
+	
+	// 댓글 등록
+	@Override
+	public void replyRegistry(ReplyDTO reply) {
+		sql.insert(namespace + ".replyRegistry", reply);
+	};
+	
+	// 댓글 수정
+	@Override
+	public void replyUpdate(ReplyDTO reply) {
+		sql.update(namespace + ".replyUpdate", reply);
+	};
+	
+	// 댓글 삭제
+	@Override
+	public void replyDelete(ReplyDTO reply) {
+		sql.delete(namespace + ".replyDelete", reply);
 	};
 }

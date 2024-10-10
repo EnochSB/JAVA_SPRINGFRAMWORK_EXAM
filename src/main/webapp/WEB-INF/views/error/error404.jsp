@@ -1,5 +1,4 @@
-<%@ page language="java" contentType="text/html; charset=UTF-8"
-    pageEncoding="UTF-8"%>
+<%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
 <!DOCTYPE html>
 <html>
 <head>
@@ -21,7 +20,7 @@ img {
 </head>
 <body>
 <div class="main">
-	<img src="resources/images/404.png" title="404 Not Found">
+	<img src="/resources/images/404.png" title="404 Not Found">
 </div>
 </body>
 </html>

@@ -9,6 +9,8 @@ import org.springframework.stereotype.Service;
 import com.board.dao.BoardDAO;
 import com.board.dto.BoardDTO;
 import com.board.dto.FileDTO;
+import com.board.dto.LikeDTO;
+import com.board.dto.ReplyDTO;
 
 @Service
 public class BoardServiceImpl implements BoardService {
@@ -104,5 +106,53 @@ public class BoardServiceImpl implements BoardService {
 	@Override
 	public FileDTO fileInfo(int fileseqno) {
 		return dao.fileInfo(fileseqno);
+	};
+	
+	// 좋아요 싫어요 체크 여부 확인
+	@Override
+	public LikeDTO likeCheckView(int seqno, String userid) {
+		return dao.likeCheckView(seqno, userid);
+	};
+	
+	// 좋아요 싫어요 최초 등록
+	@Override
+	public void likeCheckRegistry(Map<String,Object> data) {
+		dao.likeCheckRegistry(data);
+	};
+	
+	// 좋아요 싫어요 수정
+	@Override
+	public void likeCheckUpdate(Map<String,Object> data) {
+		dao.likeCheckUpdate(data);
+	};
+	
+	// 좋아요 싫어요 갯수 수정
+	@Override
+	public void boardLikeUpdate(int seqno, int likecnt, int dislikecnt) {
+		dao.boardLikeUpdate(seqno, likecnt, dislikecnt);
+	};
+	
+	// 댓글 보기
+	@Override
+	public List<ReplyDTO> replyView(ReplyDTO reply) {
+		return dao.replyView(reply);
+	};
+	
+	// 댓글 등록
+	@Override
+	public void replyRegistry(ReplyDTO reply) {
+		dao.replyRegistry(reply);
+	};
+	
+	// 댓글 수정
+	@Override
+	public void replyUpdate(ReplyDTO reply) {
+		dao.replyUpdate(reply);
+	};
+	
+	// 댓글 삭제
+	@Override
+	public void replyDelete(ReplyDTO reply) {
+		dao.replyDelete(reply);
 	};
 }

@@ -1,14 +1,12 @@
 package com.board.dto;
 
-import java.util.Date;
-
 public class LikeDTO {
 	private int seqno;
 	private String userid;
 	private String mylikecheck;
 	private String mydislikecheck;
-	private Date likedate;
-	private Date dislikedate;
+	private String likedate;
+	private String dislikedate;
 	
 	public int getSeqno() {
 		return seqno;
@@ -34,16 +32,16 @@ public class LikeDTO {
 	public void setMydislikecheck(String mydislikecheck) {
 		this.mydislikecheck = mydislikecheck;
 	}
-	public Date getLikedate() {
+	public String getLikedate() {
 		return likedate;
 	}
-	public void setLikedate(Date likedate) {
+	public void setLikedate(String likedate) {
 		this.likedate = likedate;
 	}
-	public Date getDislikedate() {
+	public String getDislikedate() {
 		return dislikedate;
 	}
-	public void setDislikedate(Date dislikedate) {
+	public void setDislikedate(String dislikedate) {
 		this.dislikedate = dislikedate;
 	}
 	
