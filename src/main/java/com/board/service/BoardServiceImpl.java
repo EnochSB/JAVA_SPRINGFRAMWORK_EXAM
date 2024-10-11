@@ -16,7 +16,7 @@ import com.board.dto.ReplyDTO;
 public class BoardServiceImpl implements BoardService {
 	
 	@Autowired
-	BoardDAO dao;
+	private BoardDAO dao;
 	
 	// 리스트
 	@Override

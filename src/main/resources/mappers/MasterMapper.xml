@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+  
+ <mapper namespace="com.board.mappers.Master">
+ 
+ <!-- 삭제된 파일 리스트 보기 -->
+ <select id="fileDeleteList" resultType="com.board.dto.FileDTO">
+ 	select * from tbl_file
+ 	where checkfile = "N"
+ 	order by fileseqno
+ </select>
+ 
+ <!-- tbl_file 데이터 삭제 -->
+ <delete id="deleteFile" parameterType="int">
+ 	delete from tbl_file
+ 	where fileseqno = #{fileseqno}
+ </delete>
+ 
+ <!-- 삭제할 파일 갯수 -->
+ <select id="fileDeleteCount" resultType="int">
+ 	select count(*)
+ 	from tbl_file
+ 	where checkfile = "N"
+ </select>
+ 
+ </mapper>

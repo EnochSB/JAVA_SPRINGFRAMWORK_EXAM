@@ -172,7 +172,25 @@ const replyList = (data) => {
 			result += "[<a href='javascript:replyModify(" + jsonInfo[i].replyseqno + ")' style='cursor:pointer'>수정</a> |";
 			result += "<a href='javascript:replyDelete(" + jsonInfo[i].replyseqno + ")' style='cursor:pointer'>삭제</a>]";
 		}
-		result += "&nbsp;&nbsp;" + jsonInfo[i].replyregdate;
+		// 데이터 변환
+		let now = new Date(jsonInfo[i].replyregdate);
+		let year = now.getFullYear();
+		let month = now.getMonth() + 1;	// 0부터 시작하는 월
+		let date = now.getDate();	// day: 요일(0~6)
+		let hours = now.getHours();
+		let minutes = now.getMinutes();
+		let seconds = now.getSeconds();
+		
+		let mm = (month >= 10)? month : '0' + month;
+		let dd = (date >= 10)? date : '0' + date;
+		let hh = (hours >= 10)? hours : '0' + hours;
+		let mi = (minutes >= 10)? minutes : '0' + minutes;
+		let ss = (seconds >= 10)? seconds : '0' + seconds;
+		
+		let replyregdate = year + '-' + mm + '-' + dd + ' '
+						+ hh + ':' + mi + ':' + ss;
+		
+		result += "&nbsp;&nbsp;" + replyregdate;
 		result += "<div style='width:90%; height:auto; boarder-top:1px solid gray; overfolw:auto'>";
 		result += "<pre id='c" + jsonInfo[i].replyseqno + "'>" + jsonInfo[i].replycontent + "</pre><div>";
 		result += "<br>";
